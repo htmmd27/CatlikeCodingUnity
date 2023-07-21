@@ -26,6 +26,8 @@
 # Visual Studio cache directory
 .vs/
 
+# rider ide cache
+.idea/
 # Gradle cache directory
 .gradle/
 
