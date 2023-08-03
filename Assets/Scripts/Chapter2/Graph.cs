@@ -11,8 +11,17 @@ public class Graph : MonoBehaviour {
     // int function;
     [SerializeField]
     FunctionLibrary.FunctionName function;
+    [SerializeField, Min(0f)]
+    float functionDuration = 1f, transitionDuration = 1f;
+    float duration;
+    public enum TransitionMode { Cycle, Random }
+
+    [SerializeField]
+    TransitionMode transitionMode;
     Transform[] points;
-    
+    bool transitioning;
+
+    FunctionLibrary.FunctionName transitionFunction;
     void Awake () {
         float step = 2f / resolution;
         //var position = Vector3.zero;
@@ -36,20 +45,14 @@ public class Graph : MonoBehaviour {
 
     private void Update()
     {
-        FunctionLibrary.Function f = FunctionLibrary.GetFunction(function);
-        float time = Time.time;
-        float step = 2f / resolution;
-        float v = 0.5f * step - 1f;
-        for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++) {
-            if (x == resolution) {
-                x = 0;
-                z += 1;
-                v = (z + 0.5f) * step - 1f;
-            }
-            float u = (x + 0.5f) * step - 1f;
-            //float v = (z + 0.5f) * step - 1f;
-            points[i].localPosition = f(u, v, time);
+        duration += Time.deltaTime;
+        if (duration >= functionDuration) {
+            duration -= functionDuration;
+            //function = FunctionLibrary.GetNextFunctionName(function);
+            PickNextFunction();
         }
+        UpdateFunction();
+        
         // for (int i = 0; i < points.Length; i++)
         // {
         //     Transform point = points[i];
@@ -65,5 +68,27 @@ public class Graph : MonoBehaviour {
         //     position.y = f(position.x, position.z, Time.time);
         //     point.localPosition = position;
         // }
+    }
+    void PickNextFunction () {
+        function = transitionMode == TransitionMode.Cycle ?
+            FunctionLibrary.GetNextFunctionName(function) :
+            FunctionLibrary.GetRandomFunctionNameOtherThan(function);
+    }
+    private void UpdateFunction()
+    {
+        FunctionLibrary.Function f = FunctionLibrary.GetFunction(function);
+        float time = Time.time;
+        float step = 2f / resolution;
+        float v = 0.5f * step - 1f;
+        for (int i = 0, x = 0, z = 0; i < points.Length; i++, x++) {
+            if (x == resolution) {
+                x = 0;
+                z += 1;
+                v = (z + 0.5f) * step - 1f;
+            }
+            float u = (x + 0.5f) * step - 1f;
+            //float v = (z + 0.5f) * step - 1f;
+            points[i].localPosition = f(u, v, time);
+        }
     }
 }
